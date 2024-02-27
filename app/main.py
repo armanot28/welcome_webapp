@@ -24,5 +24,11 @@ def index():
     data = get_data_from_database()
     return render_template('index.html', data=data)
 
+@app.route('/api')
+def api():
+    # Obtener datos de la base de datos
+    data = get_data_from_database()
+    return render_template('api.html', data=data)
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0')
