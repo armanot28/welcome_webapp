@@ -1,0 +1,54 @@
+---
+- name: Install Terraform on CentOS 8 Stream
+  hosts: localhost
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Check if EPEL Repository is installed
+      stat:
+        path: /etc/yum.repos.d/epel.repo
+      register: epel_repo
+
+    - name: Install EPEL Repository if not installed
+      yum:
+        name: epel-release
+        state: present
+      when: epel_repo.stat.exists == False
+
+    - name: Check if unzip package is installed
+      become: yes
+      stat:
+        path: /usr/bin/unzip
+      register: unzip_installed
+
+    - name: Install unzip package if not installed
+      yum:
+        name: unzip
+        state: present
+      when: unzip_installed.stat.exists == False
+
+    - name: Check if Terraform binary exists
+      stat:
+        path: /usr/local/bin/terraform
+      register: terraform_binary
+
+    - name: Download Terraform if not already downloaded
+      get_url:
+        url: "https://releases.hashicorp.com/terraform/0.15.5/terraform_0.15.5_linux_amd64.zip"
+        dest: "/tmp/terraform.zip"
+      when: terraform_binary.stat.exists == False
+
+    - name: Extract Terraform Binary if not already extracted
+      unarchive:
+        src: "/tmp/terraform.zip"
+        dest: "/usr/local/bin"
+        remote_src: yes
+        creates: "/usr/local/bin/terraform"
+      when: terraform_binary.stat.exists == False
+
+    - name: Set Terraform Binary Permissions if not already set
+      file:
+        path: "/usr/local/bin/terraform"
+        mode: "+x"
+      when: terraform_binary.stat.exists == False
